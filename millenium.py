@@ -7,15 +7,17 @@ import time
 import datetime
 import csv
 
-relay_01 = 4 # BCM4, pin7, OUT-01, bulb light
-relay_02 = 17 # BCM17, pin11, OUT-02, garage door
-relay_03 = 27 # BCM27, pin13, OUT-03
-relay_04 = 22 # BCM22, pin15, OUT-04
-relay_05 = 10 # BCM10, pin19, OUT-05
-input_01 = 9 # BCM9, pin21, IN-01, short input
-input_02 = 11 # BCM11, pin23, IN-02, long input
+output_01 = 4 # BCM4, pin7, OUT-01, heater_control
+output_02 = 17 # BCM17, pin11, OUT-02, livingroom_v3v_control 
+output_03 = 27 # BCM27, pin13, OUT-03, bedroom_v3v_control
+output_04 = 22 # BCM22, pin15, OUT-04, livingroom_pump_control
+output_05 = 10 # BCM10, pin19, OUT-05, bedroom_pump_control
+input_01 = 9 # BCM9, pin21, IN-01, xxx 
+input_02 = 11 # BCM11, pin23, IN-02, yyy
+input_03 = 5 # BCM5, pin29, IN-03, zzz
 
-period = 0.5 # Period in seconds
+# Check period [jav]
+period = 5 # Period in seconds
 t = 0
 
 door_hysteresis = False
@@ -28,10 +30,12 @@ pir_time = 60
 pir_time_begin = datetime.datetime.strptime('20:00', '%H:%M').time()
 pir_time_end = datetime.datetime.strptime('08:00', '%H:%M').time()
 
-command_file_str = '/home/pi/Projects/piswitch/command.csv'
+command_file_str = '/home/pi/Projects/pi-millenium/command.csv'
 
 output_gpio = [GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH]
-input_gpio = [GPIO.LOW, GPIO.LOW, GPIO.LOW, GPIO.LOW, GPIO.LOW] # input_01(IN-01), input_02(IN-02), light_on(csv), light_off(csv), door(csv)
+
+# check input_gpio sintax [jav]
+input_gpio = [GPIO.LOW, GPIO.LOW, GPIO.LOW, GPIO.LOW, GPIO.LOW, GPIO.LOW] # input_01(IN-01), input_02(IN-02), input_03(IN-03), light_on(csv), light_off(csv), door(csv)
 
 def show_variables():
     global period
@@ -55,28 +59,30 @@ def show_variables():
 def init_gpio():
     # Initialize GPIO
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(relay_01, GPIO.OUT) # GPIO assign mode
-    GPIO.setup(relay_02, GPIO.OUT) # GPIO assign mode
-    GPIO.setup(relay_03, GPIO.OUT) # GPIO assign mode
-    GPIO.setup(relay_04, GPIO.OUT) # GPIO assign mode
-    GPIO.setup(relay_05, GPIO.OUT) # GPIO assign mode
+    GPIO.setup(output_01, GPIO.OUT) # GPIO assign mode
+    GPIO.setup(output_02, GPIO.OUT) # GPIO assign mode
+    GPIO.setup(output_03, GPIO.OUT) # GPIO assign mode
+    GPIO.setup(output_04, GPIO.OUT) # GPIO assign mode
+    GPIO.setup(output_05, GPIO.OUT) # GPIO assign mode
     GPIO.setup(input_01, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # input with pull-down 
     GPIO.setup(input_02, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # input with pull-down 
+    GPIO.setup(input_03, GPIO.IN, pull_up_down = GPIO.PUD_DOWN) # input with pull-down 
 
     return 0
 
 def write_gpio():
-    GPIO.output(relay_01, output_gpio[0])
-    GPIO.output(relay_02, output_gpio[1])
-    GPIO.output(relay_03, output_gpio[2])
-    GPIO.output(relay_04, output_gpio[3])
-    GPIO.output(relay_05, output_gpio[4])
+    GPIO.output(output_01, output_gpio[0])
+    GPIO.output(output_02, output_gpio[1])
+    GPIO.output(output_03, output_gpio[2])
+    GPIO.output(output_04, output_gpio[3])
+    GPIO.output(output_05, output_gpio[4])
 
     return 0
 
 def read_gpio():
     input_gpio[0] = GPIO.input(input_01)
     input_gpio[1] = GPIO.input(input_02)
+    input_gpio[2] = GPIO.input(input_03)
 
     return 0
 
@@ -225,12 +231,14 @@ write_gpio()
 try:
     # Infinite loop waiting for a CTRL^C
     while True:
-        process_automaton()
+        # Check it [jav]
+        #process_automaton()
 
         t += 1
         write_gpio()
         read_gpio()
-        read_command2()
+        # [jav] check main loop
+        #read_command2()
         status_gpio()
         time.sleep(period)
 
