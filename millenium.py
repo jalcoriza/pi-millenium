@@ -214,7 +214,7 @@ def read_command():
 
 
 def status_gpio():
-    print(f'{datetime.datetime.now()} input={input_gpio} output={output_gpio}')
+    print(f'{datetime.datetime.now()} input={input_gpio} output={output_gpio} t={t}')
     if command != '':
         print(f'{datetime.datetime.now()} command={command} parameter={parameter}')
 
@@ -316,15 +316,17 @@ def process_test_heater():
     if test_heater_state == 'STATE_INIT':
         test_heater_state = 'STATE_TURN_ON_HEATER'
 
+    #Check it! I need a full cycle here before jump to the next state!! [jav]
     elif test_heater_state == 'STATE_TURN_ON_HEATER':
-        input_gpio[3] == GPIO.HIGH
+        print(f'{datetime.datetime.now()} test_heater[{parameter}]: Inside STATE_TURN_ON_HEATER, setting input_gpio[3]=1')
+        input_gpio[3] = GPIO.HIGH
         test_heater_state = 'STATE_TURN_ON_V3V'
 
     elif test_heater_state == 'STATE_TURN_ON_V3V':
         # Activate V3V, whether livingroom or bedroom
         if parameter == 'livingroom':
             input_gpio[5] = GPIO.HIGH
-        elif paramenter == 'bedroom':
+        elif parameter == 'bedroom':
             input_gpio[7] = GPIO.HIGH
 
         test_heater_state = 'STATE_WAIT_ONE_MINUTE'
@@ -340,7 +342,7 @@ def process_test_heater():
         # Activate PUMP, whether livingroom or bedroom
         if parameter == 'livingroom':
             input_gpio[9] = GPIO.HIGH
-        elif paramenter == 'bedroom':
+        elif parameter == 'bedroom':
             input_gpio[11] = GPIO.HIGH
 
         test_heater_state = 'STATE_WAIT_TEN_MINUTES'
@@ -356,7 +358,7 @@ def process_test_heater():
         # Dectivate PUMP, whether livingroom or bedroom
         if parameter == 'livingroom':
             input_gpio[10] = GPIO.HIGH
-        elif paramenter == 'bedroom':
+        elif parameter == 'bedroom':
             input_gpio[12] = GPIO.HIGH
 
         test_heater_state = 'STATE_TURN_OFF_V3V'
@@ -365,7 +367,7 @@ def process_test_heater():
         # Deactivate V3V, whether livingroom or bedroom
         if parameter == 'livingroom':
             input_gpio[6] = GPIO.HIGH
-        elif paramenter == 'bedroom':
+        elif parameter == 'bedroom':
             input_gpio[8] = GPIO.HIGH
 
         test_heater_state = 'STATE_WAIT_ANOTHER_MINUTE'
