@@ -380,7 +380,7 @@ def process_test_heater():
         test_heater_count += 1
         
     elif test_heater_state == 'STATE_TURN_OFF_HEATER':
-        input_gpio[4] == GPIO.HIGH
+        input_gpio[4] = GPIO.HIGH
         test_heater_state = 'STATE_END'
 
     elif test_heater_state == 'STATE_END':
