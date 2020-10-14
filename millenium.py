@@ -31,9 +31,14 @@ pir_time_begin = datetime.datetime.strptime('20:00', '%H:%M').time()
 pir_time_end = datetime.datetime.strptime('08:00', '%H:%M').time()
 
 command_file_str = '/home/pi/Projects/pi-millenium/command.csv'
+command = ''
+parameter = ''
 
 test_count = 0
 test_states = 10
+
+test_heater_state = 'STATE_INIT'
+test_heater_count = 0
 
 # output_gpio[] definition 
 # bit 0 = HEATER_CONTROL 
@@ -72,12 +77,18 @@ def show_variables():
     global pir_time_end
     global test_count
     global test_states
+    global command
+    global parameter
+    global test_heater_state
+    global test_heater_count
 
     print(f'period={period}s, t={t}')
     print(f'door_hysteresis={door_hysteresis}, door_count={door_count}, door_time={door_time}')
     print(f'pir_hysteresis={pir_hysteresis}, pir_count={pir_count}, pir_time={pir_time}')
     print(f'pir_time_begin={pir_time_begin}, pir_time_end={pir_time_end}')
     print(f'test_count={test_count}, test_states={test_states}')
+    print(f'command={command}, parameter={parameter}')
+    print(f'test_heater_state={test_heater_state}, test_heater_count={test_heater_count}')
 
     return 0
 
@@ -111,12 +122,11 @@ def read_gpio():
 
     return 0
 
+
 def read_command():
-
-    return 0
-
-def read_command3():
-    global command_file_str;
+    global command_file_str
+    global command
+    global parameter
 
     with open(command_file_str, mode='r') as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -126,54 +136,60 @@ def read_command3():
         # Row fromat
         # written|read, who    , n --> input[n], value
         # w|r         , jav|dan, [3-12]        , 0|1
+        # w|r         , jav|dan, test_heater   , livingroom|bedroom
         for row in csv_reader:
             print(f'{datetime.datetime.now()} raw_command=,{row}')
             if row[0] == 'r': # new command
                 print(f'{datetime.datetime.now()} new command!')
                 row[0] = 'w' # mark the command as done
 
-            if int(row[2]) == 3: # HEATER_CONTROL_ON 
-                print(f'{datetime.datetime.now()} command=HEATER_CONTROL_ON,{row[3]}')
-                input_gpio[3] = int(row[3]) 
+            if row[2] == 'test_heater': # TEST_HEATER (full cycle ON-10minutes-OFF)
+                print(f'{datetime.datetime.now()} command=TEST_HEATER on {row[3]}')
+                command = row[2]
+                parameter = row[3]
 
-            elif int(row[2]) == 4: # HEATER_CONTROL_OFF 
-                print(f'{datetime.datetime.now()} command=HEATER_CONTROL_OFF,{row[3]}')
-                input_gpio[4] = int(row[3]) 
+            else:
+                if int(row[2]) == 3: # HEATER_CONTROL_ON 
+                    print(f'{datetime.datetime.now()} command=HEATER_CONTROL_ON,{row[3]}')
+                    input_gpio[3] = int(row[3]) 
 
-            if int(row[2]) == 5: # LIVINGROOM_V3V_CONTROL_ON 
-                print(f'{datetime.datetime.now()} command=LIVINGROOM_V3V_CONTROL_ON,{row[3]}')
-                input_gpio[5] = int(row[3]) 
+                elif int(row[2]) == 4: # HEATER_CONTROL_OFF 
+                    print(f'{datetime.datetime.now()} command=HEATER_CONTROL_OFF,{row[3]}')
+                    input_gpio[4] = int(row[3]) 
 
-            elif int(row[2]) == 6: # LIVINGROOM_V3V_CONTROL_OFF 
-                print(f'{datetime.datetime.now()} command=LIVINGROOM_V3V_CONTROL_OFF,{row[3]}')
-                input_gpio[6] = int(row[3]) 
+                if int(row[2]) == 5: # LIVINGROOM_V3V_CONTROL_ON 
+                    print(f'{datetime.datetime.now()} command=LIVINGROOM_V3V_CONTROL_ON,{row[3]}')
+                    input_gpio[5] = int(row[3]) 
 
-            if int(row[2]) == 7: # BEDROOM_V3V_CONTROL_ON 
-                print(f'{datetime.datetime.now()} command=BEDROOM_V3V_CONTROL_ON,{row[3]}')
-                input_gpio[7] = int(row[3]) 
+                elif int(row[2]) == 6: # LIVINGROOM_V3V_CONTROL_OFF 
+                    print(f'{datetime.datetime.now()} command=LIVINGROOM_V3V_CONTROL_OFF,{row[3]}')
+                    input_gpio[6] = int(row[3]) 
 
-            elif int(row[2]) == 8: # BEDGROOM_V3V_CONTROL_OFF 
-                print(f'{datetime.datetime.now()} command=BEDROOM_V3V_CONTROL_OFF,{row[3]}')
-                input_gpio[8] = int(row[3]) 
+                if int(row[2]) == 7: # BEDROOM_V3V_CONTROL_ON 
+                    print(f'{datetime.datetime.now()} command=BEDROOM_V3V_CONTROL_ON,{row[3]}')
+                    input_gpio[7] = int(row[3]) 
 
-            if int(row[2]) == 9: # LIVINGROOM_PUMP_CONTROL_ON 
-                print(f'{datetime.datetime.now()} command=LIVINGROOM_PUMP_CONTROL_ON,{row[3]}')
-                input_gpio[9] = int(row[3]) 
+                elif int(row[2]) == 8: # BEDGROOM_V3V_CONTROL_OFF 
+                    print(f'{datetime.datetime.now()} command=BEDROOM_V3V_CONTROL_OFF,{row[3]}')
+                    input_gpio[8] = int(row[3]) 
 
-            elif int(row[2]) == 10: # LIVINGROOM_PUMP_CONTROL_OFF 
-                print(f'{datetime.datetime.now()} command=LIVINGROOM_PUMP_CONTROL_OFF,{row[3]}')
-                input_gpio[10] = int(row[3]) 
+                if int(row[2]) == 9: # LIVINGROOM_PUMP_CONTROL_ON 
+                    print(f'{datetime.datetime.now()} command=LIVINGROOM_PUMP_CONTROL_ON,{row[3]}')
+                    input_gpio[9] = int(row[3]) 
 
-            if int(row[2]) == 11: # BEDROOM_PUMP_CONTROL_ON 
-                print(f'{datetime.datetime.now()} command=BEDROOM_PUMP_CONTROL_ON,{row[3]}')
-                input_gpio[11] = int(row[3]) 
+                elif int(row[2]) == 10: # LIVINGROOM_PUMP_CONTROL_OFF 
+                    print(f'{datetime.datetime.now()} command=LIVINGROOM_PUMP_CONTROL_OFF,{row[3]}')
+                    input_gpio[10] = int(row[3]) 
 
-            elif int(row[2]) == 12: # BEDGROOM_PUMP_CONTROL_OFF 
-                print(f'{datetime.datetime.now()} command=BEDROOM_PUMP_CONTROL_OFF,{row[3]}')
-                input_gpio[12] = int(row[3]) 
+                if int(row[2]) == 11: # BEDROOM_PUMP_CONTROL_ON 
+                    print(f'{datetime.datetime.now()} command=BEDROOM_PUMP_CONTROL_ON,{row[3]}')
+                    input_gpio[11] = int(row[3]) 
 
-            line_count += 1
+                elif int(row[2]) == 12: # BEDGROOM_PUMP_CONTROL_OFF 
+                    print(f'{datetime.datetime.now()} command=BEDROOM_PUMP_CONTROL_OFF,{row[3]}')
+                    input_gpio[12] = int(row[3]) 
 
+        line_count += 1
         
         print(f'{datetime.datetime.now()} Processed {line_count} lines')
 
@@ -193,64 +209,14 @@ def read_command3():
 
         print(f'{datetime.datetime.now()} Updated csv file with {line_count} lines')
 
-
-    return 0
-
-def read_command2():
-    global command_file_str;
-
-    with open(command_file_str, mode='r') as csv_file:
-        csv_reader = csv.reader(csv_file, delimiter=',')
-        line_count = 0
-
-        # Beta implementation. Only process one command per file!
-        # Row fromat
-        # written|read, who    , n --> input[n], value
-        # w|r         , jav|dan, [2-4]         , 0|1
-        for row in csv_reader:
-            print(f'{datetime.datetime.now()} raw_command=,{row}')
-            if row[0] == 'r': # new command
-                print(f'{datetime.datetime.now()} new command!')
-                row[0] = 'w' # mark the command as done
-
-            if int(row[2]) == 2: # light on command
-                print(f'{datetime.datetime.now()} command=light,{row[3]}')
-                input_gpio[2] = int(row[3]) 
-
-            if int(row[2]) == 3: # light off command
-                print(f'{datetime.datetime.now()} command=light,{row[3]}')
-                input_gpio[3] = int(row[3]) 
-
-            elif int(row[2]) == 4: # door command
-                print(f'{datetime.datetime.now()} command=door,{row[3]}')
-                input_gpio[4] = int(row[3]) 
-
-            line_count += 1
-
-        
-        print(f'{datetime.datetime.now()} Processed {line_count} lines')
-
-        # Save a copy of the read content
-        # check it - it doesn't work
-        lines = list(csv_reader)
-        print(f'{datetime.datetime.now()} Save lines= {lines}')
-                
-    with open(command_file_str, mode='w') as csv_file:
-        print(f'{datetime.datetime.now()} Updating csv file')
-
-        line_count = 0
-        csv_writer = csv.writer(csv_file, delimiter=',', quoting=csv.QUOTE_NONE, escapechar='\\')
-        for row in lines:
-            csv_writer.writerow(row)
-            line_count += 1
-
-        print(f'{datetime.datetime.now()} Updated csv file with {line_count} lines')
 
     return 0
 
 
 def status_gpio():
     print(f'{datetime.datetime.now()} input={input_gpio} output={output_gpio}')
+    if command != '':
+        print(f'{datetime.datetime.now()} command={command} parameter={parameter}')
 
     return 0
 
@@ -339,75 +305,97 @@ def process_pump_control():
                 
     return 0
 
-def process_door():
-    global door_hysteresis
-    global door_count
-    global door_time
+def process_test_heater():
+    global test_heater_state
+    global test_heater_count
+    global command
+    global parameter
+    global period
 
-    if (door_hysteresis): 
-        door_count += 1;
-        if (door_count * period) > door_time:
-            door_hysteresis = False
-            door_count = 0
-            input_gpio[4] = GPIO.LOW
+    print(f'{datetime.datetime.now()} test_heater[{parameter}]: {test_heater_state}, {test_heater_count}')
+    if test_heater_state == 'STATE_INIT':
+        test_heater_state = 'STATE_TURN_ON_HEATER'
 
-    else:
-        if (input_gpio[4] == GPIO.HIGH):
-            output_gpio[1] = GPIO.LOW
-            door_hysteresis = True
-            print(f'{datetime.datetime.now()} Open/Close the door!')
+    elif test_heater_state == 'STATE_TURN_ON_HEATER':
+        input_gpio[3] == GPIO.HIGH
+        test_heater_state = 'STATE_TURN_ON_V3V'
 
-        else:
-            output_gpio[1] = GPIO.HIGH
-            print(f'{datetime.datetime.now()} Reseting the door\'s relay!')
-                
-    return 0
+    elif test_heater_state == 'STATE_TURN_ON_V3V':
+        # Activate V3V, whether livingroom or bedroom
+        if parameter == 'livingroom':
+            input_gpio[5] = GPIO.HIGH
+        elif paramenter == 'bedroom':
+            input_gpio[7] = GPIO.HIGH
 
-def process_pir():
-    global pir_hysteresis
-    global pir_count
-    global pir_time
-    global pir_time_begin
-    global pir_time_end
+        test_heater_state = 'STATE_WAIT_ONE_MINUTE'
 
-    time_now = datetime.datetime.now().time()
-    if (input_gpio[2] == GPIO.HIGH) and (input_gpio[3] == GPIO.LOW):
-        output_gpio[0] = GPIO.LOW
+    elif test_heater_state == 'STATE_WAIT_ONE_MINUTE':
+        if test_heater_count > (60/period):
+            test_heater_state = 'STATE_TURN_ON_PUMP'
+            test_heater_count = 0
+            
+        test_heater_count += 1
         
-    elif (input_gpio[3] == GPIO.HIGH):
-        output_gpio[0] = GPIO.HIGH
-        input_gpio[2] = GPIO.LOW
-        input_gpio[3] = GPIO.LOW
+    elif test_heater_state == 'STATE_TURN_ON_PUMP':
+        # Activate PUMP, whether livingroom or bedroom
+        if parameter == 'livingroom':
+            input_gpio[9] = GPIO.HIGH
+        elif paramenter == 'bedroom':
+            input_gpio[11] = GPIO.HIGH
 
-    elif (time_now > pir_time_begin) or (time_now < pir_time_end):  
-        if (pir_hysteresis): 
-            pir_count += 1;
-            if (pir_count * period) > pir_time:
-                pir_hysteresis = False
-                pir_count = 0
+        test_heater_state = 'STATE_WAIT_TEN_MINUTES'
 
-        else:
-            if (input_gpio[0] == GPIO.HIGH):
-                output_gpio[0] = GPIO.LOW
-                pir_hysteresis = True
-                print(f'{datetime.datetime.now()} detected movement! turn on the light!')
+    elif test_heater_state == 'STATE_WAIT_TEN_MINUTES':
+        if test_heater_count > (600/period):
+            test_heater_state = 'STATE_TURN_OFF_PUMP'
+            test_heater_count = 0
+            
+        test_heater_count += 1
+        
+    elif test_heater_state == 'STATE_TURN_OFF_PUMP':
+        # Dectivate PUMP, whether livingroom or bedroom
+        if parameter == 'livingroom':
+            input_gpio[10] = GPIO.HIGH
+        elif paramenter == 'bedroom':
+            input_gpio[12] = GPIO.HIGH
 
-            else:
-                output_gpio[0] = GPIO.HIGH
+        test_heater_state = 'STATE_TURN_OFF_V3V'
 
-    else:
-        print(f'{datetime.datetime.now()} now={time_now} is outside ({pir_time_begin},{pir_time_end})')
+    elif test_heater_state == 'STATE_TURN_OFF_V3V':
+        # Deactivate V3V, whether livingroom or bedroom
+        if parameter == 'livingroom':
+            input_gpio[6] = GPIO.HIGH
+        elif paramenter == 'bedroom':
+            input_gpio[8] = GPIO.HIGH
 
+        test_heater_state = 'STATE_WAIT_ANOTHER_MINUTE'
+
+    elif test_heater_state == 'STATE_WAIT_ANOTHER_MINUTE':
+        if test_heater_count > (60/period):
+            test_heater_state = 'STATE_TURN_OFF_HEATER'
+            test_heater_count = 0
+            
+        test_heater_count += 1
+        
+    elif test_heater_state == 'STATE_TURN_OFF_HEATER':
+        input_gpio[4] == GPIO.HIGH
+        test_heater_state = 'STATE_END'
+
+    elif test_heater_state == 'STATE_END':
+        test_heater_state = 'STATE_INIT'
+        test_heater_count = 0
+        command = ''
+        parameter = ''
 
     return 0
 
 def process_automaton():
-    process_door()
-    process_pir()
+    global command
+    global parameter
 
-    return 0
+    if command == 'test_heater':
+        process_test_heater()
 
-def process_automaton3():
     process_heater_control()
     process_v3v_control()
     process_pump_control()
@@ -473,16 +461,12 @@ write_gpio()
 try:
     # Infinite loop waiting for a CTRL^C
     while True:
-        #process_automaton()
-        process_automaton3()
+        process_automaton()
 
         t += 1
         write_gpio()
         read_gpio()
-        # [jav] check main loop
-        read_command3()
-        #read_command2()
-        #test_relays()
+        read_command()
         status_gpio()
         time.sleep(period)
 
