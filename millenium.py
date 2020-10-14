@@ -31,6 +31,12 @@ pir_time_begin = datetime.datetime.strptime('20:00', '%H:%M').time()
 pir_time_end = datetime.datetime.strptime('08:00', '%H:%M').time()
 
 command_file_str = '/home/pi/Projects/pi-millenium/command.csv'
+# 
+# Available commands
+# test_heater
+# reset
+# automate_mode
+#
 command = ''
 parameter = ''
 
@@ -39,6 +45,42 @@ test_states = 10
 
 test_heater_state = 'STATE_INIT'
 test_heater_count = 0
+
+#
+# main_state's states
+# ST_INIT
+# ST_WAIT_ONE_MINUTE_01
+# ST_READY
+# ST_TURN_ON_HEATER
+# ST_TURN_ON_V3V_LIVINGROOM
+# ST_TURN_ON_V3V_BEDGROOM
+# ST_TURN_ON_V3V_LIVINGROOM_BEDROOM
+# ST_WAIT_ONE_MINUTE_02
+# ST_TURN_ON_PUMP_LIVINGROOM
+# ST_TURN_ON_PUMP_BEDROOM
+# ST_TURN_ON_PUMP_LIVINGROOM_BEDROOM
+# ST_HEATING_LIVINGROOM
+# ST_HEATING_BEDROOM
+# ST_HEATING_LIVINGROOM_BDEROOM
+# ST_WAIT_ONE_MINUTE_03
+# ST_TURN_OFF_V3V_LIVINGROOM
+# ST_TURN_OFF_V3V_BEDROOM
+# ST_TURN_OFF_V3V_LIVINGROOM_BEDROOM
+# ST_TURN_OFF_HEATER
+#
+#
+main_state = 'ST_INIT'
+main_count = 0
+
+bedroom_time_begin  = datetime.datetime.strptime('19:00', '%H:%M').time()
+bedroom_time_end  = datetime.datetime.strptime('22:30', '%H:%M').time()
+livingroom_time_begin  = datetime.datetime.strptime('18:00', '%H:%M').time()
+livingroom_time_end  = datetime.datetime.strptime('22:30', '%H:%M').time()
+
+livingroom_time = False
+bedroom_time = False
+livingroom_thermostat = False
+bedroom_thermostat = False
 
 # output_gpio[] definition 
 # bit 0 = HEATER_CONTROL 
@@ -81,6 +123,12 @@ def show_variables():
     global parameter
     global test_heater_state
     global test_heater_count
+    global main_state
+    global main_count 
+    global livingroom_time
+    global bedroom_time
+    global livingroom_thermostat
+    global bedroom_thermostat
 
     print(f'period={period}s, t={t}')
     print(f'door_hysteresis={door_hysteresis}, door_count={door_count}, door_time={door_time}')
@@ -88,6 +136,9 @@ def show_variables():
     print(f'pir_time_begin={pir_time_begin}, pir_time_end={pir_time_end}')
     print(f'test_count={test_count}, test_states={test_states}')
     print(f'command={command}, parameter={parameter}')
+    print(f'main_state={test_heater_state}, main_count={main_count}')
+    print(f'livingroom_time={livingroom_time}, bedroom_time={bedroom_time}')
+    print(f'livingroom_thermostat={livingroom_thermostat}, bedroom_thermostat={bedroom_thermostat}')
     print(f'test_heater_state={test_heater_state}, test_heater_count={test_heater_count}')
 
     return 0
@@ -137,13 +188,26 @@ def read_command():
         # written|read, who    , n --> input[n], value
         # w|r         , jav|dan, [3-12]        , 0|1
         # w|r         , jav|dan, test_heater   , livingroom|bedroom
+        # w|r         , jav|dan, automate_mode , x
+        # w|r         , jav|dan, reset         , x
         for row in csv_reader:
             print(f'{datetime.datetime.now()} raw_command=,{row}')
             if row[0] == 'r': # new command
                 print(f'{datetime.datetime.now()} new command!')
                 row[0] = 'w' # mark the command as done
 
-            if row[2] == 'test_heater': # TEST_HEATER (full cycle ON-10minutes-OFF)
+            # Complete the automate_mode and reset commands [jav]
+            if row[2] == 'automate_mode': # AUTOMATE_MODE (thermostat controller mode)
+                print(f'{datetime.datetime.now()} command=AUTOMATE_MODE, {row[3]}')
+                command = row[2]
+                parameter = row[3]
+
+            elif row[2] == 'reset': # RESET 
+                print(f'{datetime.datetime.now()} command=RESET, {row[3]}')
+                command = row[2]
+                parameter = row[3]
+
+            elif row[2] == 'test_heater': # TEST_HEATER (full cycle ON-10minutes-OFF)
                 print(f'{datetime.datetime.now()} command=TEST_HEATER on {row[3]}')
                 command = row[2]
                 parameter = row[3]
@@ -214,9 +278,14 @@ def read_command():
 
 
 def status_gpio():
+    global livingroom_time
+    global bedroom_time
+    global livingroom_thermostat
+    global bedroom_thermostat
+    
     print(f'{datetime.datetime.now()} input={input_gpio} output={output_gpio} t={t}')
     if command != '':
-        print(f'{datetime.datetime.now()} command={command} parameter={parameter}')
+        print(f'{datetime.datetime.now()} command={command} parameter={parameter} livingroom={livingroom_time}, {livingroom_thermostat}, bedroom={bedroom_time}, {bedroom_thermostat}')
 
     return 0
 
@@ -305,6 +374,142 @@ def process_pump_control():
                 
     return 0
 
+def check_thermostat():
+    global bedroom_time_begin
+    global bedroom_time_end
+    global livingroom_time_begin
+    global livingroom_time_end
+    global livingroom_time
+    global livingroom_thermostat
+    global bedroom_time
+    global bedroom_thermostat
+
+    # Update time limits
+    time_now = datetime.datetime.now().time()
+    if (time_now > livingroom_time_begin) or (time_now < livingroom_time_end):
+        livingroom_time = True
+
+    if (time_now > bedroom_time_begin) or (time_now < bedroom_time_end):
+        bedroom_time = True
+
+    # Update thermostat status
+    if input_gpio[0] == 1:
+        livingroom_thermostat = True
+
+    if input_gpio[1] == 1:
+        bedroom_thermostat = True
+
+    return 0
+
+def process_automate_mode():
+    global main_state
+    global main_count
+    global command
+    global parameter
+    global period
+    global livingroom_time
+    global bedroom_time
+    global livingroom_thermostat
+    global bedroom_thermostat
+
+    print(f'{datetime.datetime.now()} automate_mode[{parameter}]: {main_state}, {main_count}')
+    if main_state  == 'ST_INIT':
+        # Initialize registers and variables
+        output_gpio = [GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH]
+        main_state = 'ST_WAIT_ONE_MINUTE_01'
+
+    elif main_state == 'ST_WAIT_ONE_MINUTE_01':
+        if main_count > (60/period):
+            main_state = 'ST_READY'
+            main_count = 0
+        main_count += 1
+
+    elif main_state == 'ST_READY':
+        check_thermostat()
+        if (livingroom_time and livingroom_thermostat) or (bedroom_time and bedroom_thermostat):
+            main_state = 'ST_TURN_ON_HEATER'
+
+    elif main_state == 'ST_TURN_ON_HEATER':
+        input_gpio[3] = GPIO.HIGH
+        # [jav] complete two more cases
+        if bedroom_thermostat:
+            main_state = 'ST_TURN_ON_V3V_BEDROOM'
+
+    elif main_state == 'ST_TURN_ON_V3V_BEDROOM':
+        input_gpio[7] = GPIO.HIGH
+        main_state = 'ST_WAIT_ONE_MINUTE_02'
+
+    elif main_state == 'ST_WAIT_ONE_MINUTE_02':
+        if main_count > (60/period):
+        # [jav] complete two more cases
+            if bedroom_thermostat:
+                main_state = 'ST_TURN_ON_PUMP_BEDROOM'
+                main_count = 0
+        main_count += 1
+
+    elif main_state == 'ST_TURN_ON_PUMP_BEDROOM':
+        input_gpio[11] = GPIO.HIGH
+        main_state = 'ST_HEATING_BEDROOM'
+
+    elif main_state == 'ST_HEATING_BEDROOM':
+        check_thermostat()
+        # [jav] complete two more cases
+        if (bedroom_time and bedroom_thermostat) != True:
+            main_state = 'ST_TURN_OFF_V3V_BEDROOM'
+
+    elif main_state == 'ST_TURN_OFF_V3V_BEDROOM':
+        input_gpio[8] = GPIO.HIGH
+        main_state = 'ST_WAIT_ONE_MINUTE_03'
+
+    elif main_state == 'ST_WAIT_ONE_MINUTE_03':
+        if main_count > (60/period):
+        # [jav] complete two more cases
+            if (bedroom_time and bedroom_thermostat) != True:
+                main_state = 'ST_TURN_OFF_PUMP_BEDROOM'
+                main_count = 0
+        main_count += 1
+
+    elif main_state == 'ST_TURN_OFF_PUMP_BEDROOM':
+        input_gpio[12] = GPIO.HIGH
+        # [jav] complete two more cases
+        main_state = 'ST_TURN_OFF_HEATER'
+
+    elif main_state == 'ST_TURN_OFF_HEATER':
+        input_gpio[4] = GPIO.HIGH
+        main_state = 'ST_READY'
+
+    return 0
+
+def process_reset():
+    global command
+    global parameter
+    global test_count
+    global test_states
+    global test_heater_state
+    global test_heater_count
+    global main_state
+    global main_count
+    global t
+
+    command = ''
+    parameter = ''
+
+    test_count = 0
+    test_states = 10
+
+    test_heater_state = 'STATE_INIT'
+    test_heater_count = 0
+
+    main_state = 'ST_INIT'
+    main_count = 0
+
+    t = 0
+
+    output_gpio = [GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH]
+
+    return 0
+
+
 def process_test_heater():
     global test_heater_state
     global test_heater_count
@@ -348,7 +553,8 @@ def process_test_heater():
         test_heater_state = 'STATE_WAIT_TEN_MINUTES'
 
     elif test_heater_state == 'STATE_WAIT_TEN_MINUTES':
-        if test_heater_count > (600/period):
+        # Parametrize it [jav]
+        if test_heater_count > ((30*60)/period):
             test_heater_state = 'STATE_TURN_OFF_PUMP'
             test_heater_count = 0
             
@@ -395,7 +601,13 @@ def process_automaton():
     global command
     global parameter
 
-    if command == 'test_heater':
+    if command == 'automate_mode':
+        process_automate_mode()
+
+    elif command == 'reset':
+        process_reset()
+
+    elif command == 'test_heater':
         process_test_heater()
 
     process_heater_control()
