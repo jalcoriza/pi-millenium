@@ -62,7 +62,7 @@ test_heater_count = 0
 main_state = 'ST_INIT'
 main_count = 0
 
-bedroom_time_begin  = datetime.datetime.strptime('19:00', '%H:%M').time()
+bedroom_time_begin  = datetime.datetime.strptime('05:00', '%H:%M').time()
 bedroom_time_end  = datetime.datetime.strptime('22:30', '%H:%M').time()
 livingroom_time_begin  = datetime.datetime.strptime('18:00', '%H:%M').time()
 livingroom_time_end  = datetime.datetime.strptime('22:30', '%H:%M').time()
@@ -267,7 +267,7 @@ def status_gpio():
     
     print(f'{datetime.datetime.now()} input={input_gpio} output={output_gpio} t={t}')
     if command != '':
-        print(f'{datetime.datetime.now()} command={command} parameter={parameter} livingroom=(Time){livingroom_time}, (Thermo){livingroom_thermostat}, bedroom=(Time){bedroom_time}, (Thermo){bedroom_thermostat}')
+        print(f'{datetime.datetime.now()} command={command} parameter={parameter} livingroom={livingroom_time}(time), {livingroom_thermostat}(thermo), bedroom={bedroom_time}(time), {bedroom_thermostat}(thermo)')
 
     return 0
 
@@ -379,9 +379,14 @@ def check_thermostat():
     # Update thermostat status
     if input_gpio[0] == 1:
         livingroom_thermostat = True
+    else:
+        livingroom_thermostat = False
 
     if input_gpio[1] == 1:
         bedroom_thermostat = True
+    else:
+        bedroom_thermostat = False
+
 
     return 0
 
@@ -600,7 +605,7 @@ def process_automate_mode():
     #
     elif main_state == 'ST_WAIT_ONE_MINUTE_03':
         if main_count > (PARAMETER_DELAY_V3V/period):
-            main_state = 'ST_TURN_OF_HEATER'
+            main_state = 'ST_TURN_OFF_HEATER'
 
         main_count += 1
 

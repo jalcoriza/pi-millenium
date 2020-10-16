@@ -7,3 +7,5 @@ pi based project to replace a Crouzet Millenium logic controller to manage a Sun
 pi$ git clone https://github.com/jalcoriza/pi-millenium.git
 ```
 
+### ToDo funcionalities
+
