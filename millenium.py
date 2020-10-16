@@ -267,7 +267,7 @@ def status_gpio():
     
     print(f'{datetime.datetime.now()} input={input_gpio} output={output_gpio} t={t}')
     if command != '':
-        print(f'{datetime.datetime.now()} command={command} parameter={parameter} livingroom={livingroom_time}, {livingroom_thermostat}, bedroom={bedroom_time}, {bedroom_thermostat}')
+        print(f'{datetime.datetime.now()} command={command} parameter={parameter} livingroom=(Time){livingroom_time}, (Thermo){livingroom_thermostat}, bedroom=(Time){bedroom_time}, (Thermo){bedroom_thermostat}')
 
     return 0
 
@@ -368,10 +368,12 @@ def check_thermostat():
 
     # Update time limits
     time_now = datetime.datetime.now().time()
-    if (time_now > livingroom_time_begin) or (time_now < livingroom_time_end):
+    print(f'time_now={time_now} livingroom (begin={livingroom_time_begin},end={livingroom_time_end})\
+         bedroom (begin={bedroom_time_begin}, end={bedroom_time_end})')
+    if (time_now > livingroom_time_begin) and (time_now < livingroom_time_end):
         livingroom_time = True
 
-    if (time_now > bedroom_time_begin) or (time_now < bedroom_time_end):
+    if (time_now > bedroom_time_begin) and (time_now < bedroom_time_end):
         bedroom_time = True
 
     # Update thermostat status
