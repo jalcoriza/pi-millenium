@@ -352,9 +352,9 @@ def process_pump_control():
 
         #Reset the command
         input_gpio[12] = GPIO.LOW
-
                 
     return 0
+
 
 def check_thermostat():
     global bedroom_time_begin
@@ -370,11 +370,17 @@ def check_thermostat():
     time_now = datetime.datetime.now().time()
     print(f'time_now={time_now} livingroom (begin={livingroom_time_begin},end={livingroom_time_end})\
          bedroom (begin={bedroom_time_begin}, end={bedroom_time_end})')
+
+    # Update time status
     if (time_now > livingroom_time_begin) and (time_now < livingroom_time_end):
         livingroom_time = True
+    else:
+        livingroom_time = False
 
     if (time_now > bedroom_time_begin) and (time_now < bedroom_time_end):
         bedroom_time = True
+    else:
+        bed_time = False
 
     # Update thermostat status
     if input_gpio[0] == 1:
