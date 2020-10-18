@@ -1,6 +1,6 @@
 # pi-millenium
 pi based project to replace a broken and expensive propietary Crouzet Millenium PLC that manages a double heating circuit by a Raspberrypi based hw
-![DIY raspberrypi-based PLC](https://github.com/jalcoriza/pi-millenium/doc/images/from_plc_to_rpi.jpg)
+![DIY raspberrypi-based PLC](https://github.com/jalcoriza/pi-millenium/blob/main/doc/images/from_plc_to_rpi.jpg)
 
 
 ### How to use the scripts
