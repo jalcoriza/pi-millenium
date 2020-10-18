@@ -7,5 +7,15 @@ pi based project to replace a Crouzet Millenium logic controller to manage a Sun
 pi$ git clone https://github.com/jalcoriza/pi-millenium.git
 ```
 
-### ToDo funcionalities
+### Kanban funcionalities
+1. to-do
+    * use integer states
+
+2. doing
+    * MVP (Minimum Viable Product)
+
+3. done
+    * read thermostate values
+    * read date
+    * read single-line commands from command.csv
 
