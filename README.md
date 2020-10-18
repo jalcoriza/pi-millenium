@@ -45,8 +45,7 @@ pi$ ./turn_off_pump_livingroom.sh
 
 pi$ ./turn_on_pump_bedroom.sh 
 pi$ ./turn_off_pump_bedroom.sh 
-´´´
-
+```
 
 
 ### Kanban funcionalities
