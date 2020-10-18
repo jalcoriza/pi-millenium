@@ -9,15 +9,15 @@ pi$ git clone https://github.com/jalcoriza/pi-millenium.git
 
 ### Kanban funcionalities
 #### to-do
-    - [] use integer states
-    - [] command for set any state
-    - [] dprint() funtion for different levels of logging
+- [] use integer states
+- [] command for set any state
+- [] dprint() funtion for different levels of logging
 
 #### doing
-    - [] MVP (Minimum Viable Product)
+- [] MVP (Minimum Viable Product)
 
 #### done
-    - [x] read thermostate values
-    - [x] read date
-    - [x] read single-line commands from command.csv
+- [x] read thermostate values
+- [x] read date
+- [x] read single-line commands from command.csv
 
