@@ -3,6 +3,16 @@
 
 <img src = "/doc/images/from_plc_to_rpi.jpg" width = 800>
 
+
+## Why
+My 10 years old *Crouzet Millenium 3* Programmable Logic Controller broke right in the winter seson beginning. The technical service told me that it was repairless and the replacement costed 484€!
+I realized that you don't have any control over the devices you own. Apparently the PLC's problem was sw but not hw but the technical service usually choses the simplest solution for them and normally themore expensive one for the customer
+
+## What
+
+
+## How
+
 ### How to use the scripts
 1. clone the git project
 ```
