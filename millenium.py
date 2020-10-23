@@ -1,7 +1,10 @@
 #
 # Base code to replace a Millenium Controller using a Raspberrypi 
 # python3 code
+# Author: Javier Alcoriza
+# Date: October 11th, 2020
 #
+
 import RPi.GPIO as GPIO
 import time
 import datetime
@@ -59,6 +62,7 @@ test_heater_count = 0
 # ST_TURN_OFF_HEATER
 #
 #
+
 main_state = 'ST_INIT'
 main_count = 0
 
@@ -396,6 +400,9 @@ def check_thermostat():
 
     return 0
 
+#
+# Function that controls the finite automaton in the automate mode (normal mode)
+#
 def process_automate_mode():
     global main_state
     global main_count
@@ -699,7 +706,7 @@ def process_test_heater():
 
     elif test_heater_state == 'STATE_WAIT_TEN_MINUTES':
         # Parametrize it [jav]
-        if test_heater_count > ((30*60)/period):
+        if test_heater_count > ((PARAMETER_DELAY_TEST)/period):
             test_heater_state = 'STATE_TURN_OFF_PUMP'
             test_heater_count = 0
             
