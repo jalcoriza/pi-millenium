@@ -78,6 +78,7 @@ livingroom_thermostat = False
 bedroom_thermostat = False
 
 PARAMETER_DELAY_V3V = 60 # Delay time to operate V3V in seconds
+PARAMETER_DELAY_HYSTERESIS = 5*60 # Delay time to operate V3V in seconds
 PARAMETER_DELAY_TEST = 60*30 # Delay time to operate V3V in seconds
 
 # output_gpio[] definition 
@@ -401,6 +402,64 @@ def check_thermostat():
 
     return 0
 
+def main_state_to_str(state):
+
+    if state == 0:
+        str_state = 'ST_INIT'
+    elif state == 1:
+        str_state = 'ST_WAIT_ONE_MINUTE_01'
+    elif state == 2:
+        str_state = 'ST_READY'
+    elif state == 3:
+        str_state = 'ST_READY_HYSTERESIS'
+    elif state == 4:
+        str_state = 'ST_TURN_ON_HEATER'
+    elif state == 5:
+        str_state = 'ST_TURN_ON_V3V_LIVINGROOM'
+    elif state == 6:
+        str_state = 'ST_TURN_ON_V3V_BEDROOM'
+    elif state == 7:
+        str_state = 'ST_TURN_ON_V3V_LIVINGROOM_BEDROOM'
+    elif state == 8:
+        str_state = 'ST_WAIT_ONE_MINUTE_02'
+    elif state == 9:
+        str_state = 'ST_TURN_ON_PUMP_LIVINGROOM'
+    elif state == 10:
+        str_state = 'ST_TURN_ON_PUMP_BEDROOM'
+    elif state == 11:
+        str_state = 'ST_TURN_ON_PUMP_LIVINGROOM_BEDROOM'
+    elif state == 12:
+        str_state = 'ST_HEATING_LIVINGROOM'
+    elif state == 13:
+        str_state = 'ST_HEATING_LIVINGROOM_HYSTERESIS'
+    elif state == 14:
+        str_state = 'ST_HEATING_BEDROOM'
+    elif state == 15:
+        str_state = 'ST_HEATING_BEDROOM_HYSTERESIS'
+    elif state == 16:
+        str_state = 'ST_HEATING_LIVINGROOM_BEDROOM'
+    elif state == 17:
+        str_state = 'ST_HEATING_LIVINGROOM_BEDROOM_HYSTERESIS'
+    elif state == 18:
+        str_state = 'ST_WAIT_ONE_MINUTE_03'
+    elif state == 19:
+        str_state = 'ST_TURN_OFF_V3V_LIVINGROOM'
+    elif state == 20:
+        str_state = 'ST_TURN_OFF_V3V_BEDROOM'
+    elif state == 21:
+        str_state = 'ST_TURN_OFF_V3V_LIVINGROOM_BEDROOM'
+    elif state == 22:
+        str_state = 'ST_TURN_OFF_PUMP_LIVINGROOM'
+    elif state == 23:
+        str_state = 'ST_TURN_OFF_PUMP_BEDROOM'
+    elif state == 24:
+        str_state = 'ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM'
+    elif state == 25:
+        str_state = 'ST_TURN_OFF_HEATER'
+
+    return str_state
+
+
 #
 # Function that controls the finite automaton in the automate mode (normal mode)
 #
@@ -415,7 +474,7 @@ def process_automate_mode():
     global livingroom_thermostat
     global bedroom_thermostat
 
-    print(f'{datetime.datetime.now()} automate_mode[{parameter}]: {main_state}, {main_count}')
+    print(f'{datetime.datetime.now()} automate_mode[{parameter}]: {main_state_to_str(main_state)}, {main_count}')
 
     #
     # ST_INIT
@@ -448,6 +507,17 @@ def process_automate_mode():
         check_thermostat()
         if (livingroom_time and livingroom_thermostat) or (bedroom_time and bedroom_thermostat):
             main_state = C.ST_TURN_ON_HEATER
+        else:
+            main_state = C.ST_READY_HYSTERESIS
+
+    #
+    # ST_READY_HYSTERESIS
+    #
+    elif main_state == C.ST_READY_HYSTERESIS:
+        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+            main_state = C.ST_READY
+            main_count = 0
+        main_count += 1
 
     #
     # ST_TURN_ON_HEATER
@@ -513,7 +583,7 @@ def process_automate_mode():
     #
     elif main_state == C.ST_TURN_ON_PUMP_LIVINGROOM:
         input_gpio[9] = GPIO.HIGH # Turn on pump livingroom
-        main_state = C.ST_HEATING_BEDROOM
+        main_state = C.ST_HEATING_LIVINGROOM
 
     #
     # ST_TURN_ON_PUMP_BEDROOM
@@ -528,7 +598,7 @@ def process_automate_mode():
     elif main_state == C.ST_HEATING_LIVINGROOM_BEDROOM:
         check_thermostat()
         if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = C.ST_HEATING_LIVINGROOM_BEDROOM # keep state
+            main_state = C.ST_HEATING_LIVINGROOM_BEDROOM_HYSTERESIS # 5min hysteresis
             main_count = 0
         if not(bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
             main_state = C.ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM 
@@ -539,6 +609,15 @@ def process_automate_mode():
         if not(bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
             main_state = C.ST_TURN_OFF_PUMP_BEDROOM
             main_count = 0
+
+    #
+    # ST_HEATING_LIVINGROOM_BEDROOM_HYSTERESIS
+    #
+    elif main_state == C.ST_HEATING_LIVINGROOM_BEDROOM_HYSTERESIS:
+        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+            main_state = C.ST_HEATING_LIVINGROOM_BEDROOM
+            main_count = 0
+        main_count += 1
 
     #
     # ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM
@@ -559,10 +638,10 @@ def process_automate_mode():
     #
     # ST_HEATING_LIVINGROOM
     #
-    elif main_state == C.ST_HEATING_BEDROOM:
+    elif main_state == C.ST_HEATING_LIVINGROOM:
         check_thermostat()
         if not(bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = C.ST_HEATING_BEDROOM # keep state
+            main_state = C.ST_HEATING_LIVINGROOM_HYSTERESIS # 5min hysteresis
             main_count = 0
         if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
             main_state = C.ST_TURN_ON_V3V_LIVINGROOM_BEDROOM 
@@ -570,6 +649,15 @@ def process_automate_mode():
         if not(bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
             main_state = C.ST_TURN_OFF_PUMP_LIVINGROOM
             main_count = 0
+
+    #
+    # ST_HEATING_LIVINGROOM_HYSTERESIS
+    #
+    elif main_state == C.ST_HEATING_LIVINGROOM_HYSTERESIS:
+        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+            main_state = C.ST_HEATING_LIVINGROOM
+            main_count = 0
+        main_count += 1
 
     #
     # ST_TURN_OFF_PUMP_LIVINGROOM
@@ -591,7 +679,7 @@ def process_automate_mode():
     elif main_state == C.ST_HEATING_BEDROOM:
         check_thermostat()
         if (bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-            main_state = C.ST_HEATING_BEDROOM # keep state
+            main_state = C.ST_HEATING_BEDROOM_HYSTERESIS # 5min hysteresis
             main_count = 0
         if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
             main_state = C.ST_TURN_ON_V3V_LIVINGROOM_BEDROOM 
@@ -599,6 +687,15 @@ def process_automate_mode():
         if not(bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
             main_state = C.ST_TURN_OFF_PUMP_BEDROOM
             main_count = 0
+
+    #
+    # ST_HEATING_BEDROOM_HYSTERESIS
+    #
+    elif main_state == C.ST_HEATING_BEDROOM_HYSTERESIS:
+        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+            main_state = C.ST_HEATING_BEDROOM
+            main_count = 0
+        main_count += 1
 
     #
     # ST_TURN_OFF_PUMP_BEDROOM
