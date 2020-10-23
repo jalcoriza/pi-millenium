@@ -9,6 +9,7 @@ import RPi.GPIO as GPIO
 import time
 import datetime
 import csv
+import constants as C
 
 output_01 = 4 # BCM4, pin7, OUT-01, heater_control
 output_02 = 17 # BCM17, pin11, OUT-02, livingroom_v3v_control 
@@ -63,7 +64,7 @@ test_heater_count = 0
 #
 #
 
-main_state = 'ST_INIT'
+main_state = C.ST_INIT
 main_count = 0
 
 bedroom_time_begin  = datetime.datetime.strptime('05:00', '%H:%M').time()
@@ -419,7 +420,7 @@ def process_automate_mode():
     #
     # ST_INIT
     #
-    if main_state  == 'ST_INIT':
+    if main_state  == C.ST_INIT:
         # Initialize registers and variables
         output_gpio = [GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH]
         main_count = 0
@@ -429,206 +430,206 @@ def process_automate_mode():
         bedroom_thermostat = False
 
         # Next state
-        main_state = 'ST_WAIT_ONE_MINUTE_01'
+        main_state = C.ST_WAIT_ONE_MINUTE_01
 
     #
     # ST_WAIT_ONE_MINUTE_01
     #
-    elif main_state == 'ST_WAIT_ONE_MINUTE_01':
+    elif main_state == C.ST_WAIT_ONE_MINUTE_01:
         if main_count > (PARAMETER_DELAY_V3V/period):
-            main_state = 'ST_READY'
+            main_state = C.ST_READY
             main_count = 0
         main_count += 1
 
     #
     # ST_READY
     #
-    elif main_state == 'ST_READY':
+    elif main_state == C.ST_READY:
         check_thermostat()
         if (livingroom_time and livingroom_thermostat) or (bedroom_time and bedroom_thermostat):
-            main_state = 'ST_TURN_ON_HEATER'
+            main_state = C.ST_TURN_ON_HEATER
 
     #
     # ST_TURN_ON_HEATER
     #
-    elif main_state == 'ST_TURN_ON_HEATER':
+    elif main_state == C.ST_TURN_ON_HEATER:
         input_gpio[3] = GPIO.HIGH # turn on heater
 
         if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_ON_V3V_LIVINGROOM_BEDROOM'
+            main_state = C.ST_TURN_ON_V3V_LIVINGROOM_BEDROOM
         if not(bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_ON_V3V_LIVINGROOM'
+            main_state = C.ST_TURN_ON_V3V_LIVINGROOM
         if (bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_ON_V3V_BEDROOM'
+            main_state = C.ST_TURN_ON_V3V_BEDROOM
 
     #
     # ST_TURN_ON_V3V_LIVINGROOM_BEDROOM
     #
-    elif main_state == 'ST_TURN_ON_V3V_LIVINGROOM_BEDROOM':
+    elif main_state == C.ST_TURN_ON_V3V_LIVINGROOM_BEDROOM:
         input_gpio[5] = GPIO.HIGH # turn on v3v livingroom
         input_gpio[7] = GPIO.HIGH # turn on v3v bedroom
-        main_state = 'ST_WAIT_ONE_MINUTE_02'
+        main_state = C.ST_WAIT_ONE_MINUTE_02
 
     #
     # ST_TURN_ON_V3V_LIVINGROOM
     #
-    elif main_state == 'ST_TURN_ON_V3V_LIVINGROOM':
+    elif main_state == C.ST_TURN_ON_V3V_LIVINGROOM:
         input_gpio[5] = GPIO.HIGH # turn on v3v livingroom
-        main_state = 'ST_WAIT_ONE_MINUTE_02'
+        main_state = C.ST_WAIT_ONE_MINUTE_02
 
     #
     # ST_TURN_ON_V3V_BEDROOM
     #
-    elif main_state == 'ST_TURN_ON_V3V_BEDROOM':
+    elif main_state == C.ST_TURN_ON_V3V_BEDROOM:
         input_gpio[7] = GPIO.HIGH # turn on v3v bedroom
-        main_state = 'ST_WAIT_ONE_MINUTE_02'
+        main_state = C.ST_WAIT_ONE_MINUTE_02
 
     #
     # ST_WAIT_ONE_MINUTE_02
     #
-    elif main_state == 'ST_WAIT_ONE_MINUTE_02':
+    elif main_state == C.ST_WAIT_ONE_MINUTE_02:
         if main_count > (PARAMETER_DELAY_V3V/period):
             if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-                main_state = 'ST_TURN_ON_PUMP_LIVINGROOM_BEDROOM'
+                main_state = C.ST_TURN_ON_PUMP_LIVINGROOM_BEDROOM
                 main_count = 0
             if not(bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-                main_state = 'ST_TURN_ON_PUMP_LIVINGROOM'
+                main_state = C.ST_TURN_ON_PUMP_LIVINGROOM
                 main_count = 0
             if (bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-                main_state = 'ST_TURN_ON_PUMP_BEDROOM'
+                main_state = C.ST_TURN_ON_PUMP_BEDROOM
                 main_count = 0
         main_count += 1
 
     #
     # ST_TURN_ON_PUMP_LIVINGROOM_BEDROOM
     #
-    elif main_state == 'ST_TURN_ON_PUMP_LIVINGROOM_BEDROOM':
+    elif main_state == C.ST_TURN_ON_PUMP_LIVINGROOM_BEDROOM:
         input_gpio[9] = GPIO.HIGH # Turn on pump livingroom
         input_gpio[11] = GPIO.HIGH # Turn on pump bedroom
-        main_state = 'ST_HEATING_LIVINGROOM_BEDROOM'
+        main_state = C.ST_HEATING_LIVINGROOM_BEDROOM
 
     #
     # ST_TURN_ON_PUMP_LIVINGROOM
     #
-    elif main_state == 'ST_TURN_ON_PUMP_LIVINGROOM':
+    elif main_state == C.ST_TURN_ON_PUMP_LIVINGROOM:
         input_gpio[9] = GPIO.HIGH # Turn on pump livingroom
-        main_state = 'ST_HEATING_LIVINGROOM'
+        main_state = C.ST_HEATING_BEDROOM
 
     #
     # ST_TURN_ON_PUMP_BEDROOM
     #
-    elif main_state == 'ST_TURN_ON_PUMP_BEDROOM':
+    elif main_state == C.ST_TURN_ON_PUMP_BEDROOM:
         input_gpio[11] = GPIO.HIGH # Turn on pump bedroom
-        main_state = 'ST_HEATING_BEDROOM'
+        main_state = C.ST_HEATING_BEDROOM
 
     #
     # ST_HEATING_LIVINGROOM_BEDROOM
     #
-    elif main_state == 'ST_HEATING_LIVINGROOM_BEDROOM':
+    elif main_state == C.ST_HEATING_LIVINGROOM_BEDROOM:
         check_thermostat()
         if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = 'ST_HEATING_LIVINGROOM_BEDROOM' # keep state
+            main_state = C.ST_HEATING_LIVINGROOM_BEDROOM # keep state
             main_count = 0
         if not(bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM' 
+            main_state = C.ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM 
             main_count = 0
         if (bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_OFF_PUMP_LIVINGROOM'
+            main_state = C.ST_TURN_OFF_PUMP_LIVINGROOM
             main_count = 0
         if not(bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_OFF_PUMP_BEDROOM'
+            main_state = C.ST_TURN_OFF_PUMP_BEDROOM
             main_count = 0
 
     #
     # ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM
     #
-    elif main_state == 'ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM':
+    elif main_state == C.ST_TURN_OFF_PUMP_LIVINGROOM_BEDROOM:
         input_gpio[10] = GPIO.HIGH # Turn off pump livingroom
         input_gpio[12] = GPIO.HIGH # Turn off pump bedroom
-        main_state = 'ST_TURN_OFF_V3V_LIVINGROOM_BEDROOM'
+        main_state = C.ST_TURN_OFF_V3V_LIVINGROOM_BEDROOM
 
     #
     # ST_TURN_OFF_V3V_LIVINGROOM_BEDROOM
     #
-    elif main_state == 'ST_TURN_OFF_V3V_LIVINGROOM_BEDROOM':
+    elif main_state == C.ST_TURN_OFF_V3V_LIVINGROOM_BEDROOM:
         input_gpio[6] = GPIO.HIGH # turn off v3v livingroom
         input_gpio[8] = GPIO.HIGH # turn off v3v bedroom
-        main_state = 'ST_WAIT_ONE_MINUTE_03'
+        main_state = C.ST_WAIT_ONE_MINUTE_03
 
     #
     # ST_HEATING_LIVINGROOM
     #
-    elif main_state == 'ST_HEATING_LIVINGROOM':
+    elif main_state == C.ST_HEATING_BEDROOM:
         check_thermostat()
         if not(bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = 'ST_HEATING_LIVINGROOM' # keep state
+            main_state = C.ST_HEATING_BEDROOM # keep state
             main_count = 0
         if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_ON_V3V_LIVINGROOM_BEDROOM' 
+            main_state = C.ST_TURN_ON_V3V_LIVINGROOM_BEDROOM 
             main_count = 0
         if not(bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_OFF_PUMP_LIVINGROOM'
+            main_state = C.ST_TURN_OFF_PUMP_LIVINGROOM
             main_count = 0
 
     #
     # ST_TURN_OFF_PUMP_LIVINGROOM
     #
-    elif main_state == 'ST_TURN_OFF_PUMP_LIVINGROOM':
+    elif main_state == C.ST_TURN_OFF_PUMP_LIVINGROOM:
         input_gpio[10] = GPIO.HIGH # Turn off pump livingroom
-        main_state = 'ST_TURN_OFF_V3V_LIVINGROOM'
+        main_state = C.ST_TURN_OFF_V3V_LIVINGROOM
 
     #
     # ST_TURN_OFF_V3V_LIVINGROOM
     #
-    elif main_state == 'ST_TURN_OFF_V3V_LIVINGROOM':
+    elif main_state == C.ST_TURN_OFF_V3V_LIVINGROOM:
         input_gpio[6] = GPIO.HIGH # Turn off v3v livingroom
-        main_state = 'ST_WAIT_ONE_MINUTE_03'
+        main_state = C.ST_WAIT_ONE_MINUTE_03
 
     #
     # ST_HEATING_BEDROOM
     #
-    elif main_state == 'ST_HEATING_BEDROOM':
+    elif main_state == C.ST_HEATING_BEDROOM:
         check_thermostat()
         if (bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-            main_state = 'ST_HEATING_BEDROOM' # keep state
+            main_state = C.ST_HEATING_BEDROOM # keep state
             main_count = 0
         if (bedroom_time and bedroom_thermostat) and (livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_ON_V3V_LIVINGROOM_BEDROOM' 
+            main_state = C.ST_TURN_ON_V3V_LIVINGROOM_BEDROOM 
             main_count = 0
         if not(bedroom_time and bedroom_thermostat) and not(livingroom_time and livingroom_thermostat):
-            main_state = 'ST_TURN_OFF_PUMP_BEDROOM'
+            main_state = C.ST_TURN_OFF_PUMP_BEDROOM
             main_count = 0
 
     #
     # ST_TURN_OFF_PUMP_BEDROOM
     #
-    elif main_state == 'ST_TURN_OFF_PUMP_BEDROOM':
+    elif main_state == C.ST_TURN_OFF_PUMP_BEDROOM:
         input_gpio[12] = GPIO.HIGH # Turn off pump bedroom
-        main_state = 'ST_TURN_OFF_V3V_BEDROOM'
+        main_state = C.ST_TURN_OFF_V3V_BEDROOM
 
     #
     # ST_TURN_OFF_V3V_BEDROOM
     #
-    elif main_state == 'ST_TURN_OFF_V3V_BEDROOM':
+    elif main_state == C.ST_TURN_OFF_V3V_BEDROOM:
         input_gpio[8] = GPIO.HIGH # Turn off v3v bedroom
-        main_state = 'ST_WAIT_ONE_MINUTE_03'
+        main_state = C.ST_WAIT_ONE_MINUTE_03
 
     #
     # ST_WAIT_ONE_MINUTE_03
     #
-    elif main_state == 'ST_WAIT_ONE_MINUTE_03':
+    elif main_state == C.ST_WAIT_ONE_MINUTE_03:
         if main_count > (PARAMETER_DELAY_V3V/period):
-            main_state = 'ST_TURN_OFF_HEATER'
+            main_state = C.ST_TURN_OFF_HEATER
 
         main_count += 1
 
     #
     # ST_TURN_OFF_HEATER
     #
-    elif main_state == 'ST_TURN_OFF_HEATER':
+    elif main_state == C.ST_TURN_OFF_HEATER:
         input_gpio[4] = GPIO.HIGH # turn off heater
 
-        main_state = 'ST_READY'
+        main_state = C.ST_READY
 
     return 0
 
@@ -652,7 +653,7 @@ def process_reset():
     test_heater_state = 'STATE_INIT'
     test_heater_count = 0
 
-    main_state = 'ST_INIT'
+    main_state = C.ST_INIT
     main_count = 0
 
     t = 0
