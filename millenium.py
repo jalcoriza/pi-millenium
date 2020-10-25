@@ -514,7 +514,7 @@ def process_automate_mode():
     # ST_READY_HYSTERESIS
     #
     elif main_state == C.ST_READY_HYSTERESIS:
-        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+        if main_count > (PARAMETER_DELAY_HYSTERESIS/period):
             main_state = C.ST_READY
             main_count = 0
         main_count += 1
@@ -614,7 +614,7 @@ def process_automate_mode():
     # ST_HEATING_LIVINGROOM_BEDROOM_HYSTERESIS
     #
     elif main_state == C.ST_HEATING_LIVINGROOM_BEDROOM_HYSTERESIS:
-        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+        if main_count > (PARAMETER_DELAY_HYSTERESIS/period):
             main_state = C.ST_HEATING_LIVINGROOM_BEDROOM
             main_count = 0
         main_count += 1
@@ -654,7 +654,7 @@ def process_automate_mode():
     # ST_HEATING_LIVINGROOM_HYSTERESIS
     #
     elif main_state == C.ST_HEATING_LIVINGROOM_HYSTERESIS:
-        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+        if main_count > (PARAMETER_DELAY_HYSTERESIS/period):
             main_state = C.ST_HEATING_LIVINGROOM
             main_count = 0
         main_count += 1
@@ -692,7 +692,7 @@ def process_automate_mode():
     # ST_HEATING_BEDROOM_HYSTERESIS
     #
     elif main_state == C.ST_HEATING_BEDROOM_HYSTERESIS:
-        if main_count > (PARAMETER_HYSTERESIS_V3V/period):
+        if main_count > (PARAMETER_DELAY_HYSTERESIS/period):
             main_state = C.ST_HEATING_BEDROOM
             main_count = 0
         main_count += 1
