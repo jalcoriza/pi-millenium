@@ -64,12 +64,12 @@ pi$ ./turn_off_pump_bedroom.sh
 ### to-do
 - [ ] dprint() funtion for different levels of logging
 - [ ] command for set any state
-- [ ] clean global variables usage
 
 ### doing
-- [ ] MVP (Minimum Viable Product)
+- [ ] clean global variables usage
 
 ### done
+- [x] MVP (Minimum Viable Product)
 - [x] use integer states
 - [x] read thermostate values
 - [x] read date
