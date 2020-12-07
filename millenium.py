@@ -67,10 +67,10 @@ test_heater_count = 0
 main_state = C.ST_INIT
 main_count = 0
 
-bedroom_time_begin  = datetime.datetime.strptime('05:00', '%H:%M').time()
+bedroom_time_begin  = datetime.datetime.strptime('07:00', '%H:%M').time()
 bedroom_time_end  = datetime.datetime.strptime('22:30', '%H:%M').time()
-livingroom_time_begin  = datetime.datetime.strptime('15:00', '%H:%M').time()
-livingroom_time_end  = datetime.datetime.strptime('22:30', '%H:%M').time()
+livingroom_time_begin  = datetime.datetime.strptime('08:00', '%H:%M').time()
+livingroom_time_end  = datetime.datetime.strptime('23:30', '%H:%M').time()
 
 livingroom_time = False
 bedroom_time = False
@@ -78,7 +78,7 @@ livingroom_thermostat = False
 bedroom_thermostat = False
 
 PARAMETER_DELAY_V3V = 60 # Delay time to operate V3V in seconds
-PARAMETER_DELAY_HYSTERESIS = 5*60 # Delay time to operate V3V in seconds
+PARAMETER_DELAY_HYSTERESIS = 4*60 # Delay time to operate V3V in seconds
 PARAMETER_DELAY_TEST = 60*30 # Delay time to operate V3V in seconds
 
 # output_gpio[] definition 
