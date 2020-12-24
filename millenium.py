@@ -69,8 +69,8 @@ main_count = 0
 
 bedroom_time_begin  = datetime.datetime.strptime('07:00', '%H:%M').time()
 bedroom_time_end  = datetime.datetime.strptime('22:30', '%H:%M').time()
-livingroom_time_begin  = datetime.datetime.strptime('10:00', '%H:%M').time()
-livingroom_time_end  = datetime.datetime.strptime('23:30', '%H:%M').time()
+livingroom_time_begin  = datetime.datetime.strptime('15:00', '%H:%M').time()
+livingroom_time_end  = datetime.datetime.strptime('21:30', '%H:%M').time()
 
 livingroom_time = False
 bedroom_time = False
