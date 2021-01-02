@@ -866,10 +866,9 @@ def process_automaton():
     elif command == 'test_heater':
         process_test_heater()
 
-    else:
-        process_heater_control()
-        process_v3v_control()
-        process_pump_control()
+    process_heater_control()
+    process_v3v_control()
+    process_pump_control()
 
     return 0
 
