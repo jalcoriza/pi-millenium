@@ -77,9 +77,12 @@ bedroom_time = False
 livingroom_thermostat = False
 bedroom_thermostat = False
 
-PARAMETER_DELAY_V3V = 60 # Delay time to operate V3V in seconds
-PARAMETER_DELAY_HYSTERESIS = 4*60 # Delay time to operate V3V in seconds
-PARAMETER_DELAY_TEST = 60*30 # Delay time to operate V3V in seconds
+PARAMETER_DELAY_INITIAL = 60 # Initial delay time (1 minute)
+#PARAMETER_DELAY_V3V = 60 # Delay time to let operate V3V (change its state) in seconds
+# Try best PUMP's performance
+PARAMETER_DELAY_V3V = 5*60 # Delay time to let operate V3V (change its state) in seconds (5 minutes)
+PARAMETER_DELAY_HYSTERESIS = 4*60 # Delay time to change any state (4 minutes) 
+PARAMETER_DELAY_TEST = 90*60 # Delay time to test heater (one and a half hour) 
 
 # output_gpio[] definition 
 # bit 0 = HEATER_CONTROL 
@@ -473,6 +476,8 @@ def process_automate_mode():
     global bedroom_time
     global livingroom_thermostat
     global bedroom_thermostat
+    global output_gpio
+    global input_gpio
 
     print(f'{datetime.datetime.now()} automate_mode[{parameter}]: {main_state_to_str(main_state)}, {main_count}')
 
@@ -495,7 +500,7 @@ def process_automate_mode():
     # ST_WAIT_ONE_MINUTE_01
     #
     elif main_state == C.ST_WAIT_ONE_MINUTE_01:
-        if main_count > (PARAMETER_DELAY_V3V/period):
+        if main_count > (PARAMETER_DELAY_INITIAL/period):
             main_state = C.ST_READY
             main_count = 0
         main_count += 1
@@ -740,6 +745,7 @@ def process_reset():
     global main_state
     global main_count
     global t
+    global output_gpio
 
     command = ''
     parameter = ''
@@ -753,7 +759,7 @@ def process_reset():
     main_state = C.ST_INIT
     main_count = 0
 
-    t = 0
+    #t = 0
 
     output_gpio = [GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH, GPIO.HIGH]
 
@@ -860,9 +866,10 @@ def process_automaton():
     elif command == 'test_heater':
         process_test_heater()
 
-    process_heater_control()
-    process_v3v_control()
-    process_pump_control()
+    else:
+        process_heater_control()
+        process_v3v_control()
+        process_pump_control()
 
     return 0
 
