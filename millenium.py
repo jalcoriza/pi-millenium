@@ -78,6 +78,7 @@ livingroom_thermostat = False
 bedroom_thermostat = False
 
 PARAMETER_DELAY_INITIAL = 60 # Initial delay time (1 minute)
+PARAMETER_DELAY_FINAL = 10 # Final delay time (1 minute)
 #PARAMETER_DELAY_V3V = 60 # Delay time to let operate V3V (change its state) in seconds
 # Try best PUMP's performance
 PARAMETER_DELAY_V3V = 5*60 # Delay time to let operate V3V (change its state) in seconds (5 minutes)
@@ -720,7 +721,7 @@ def process_automate_mode():
     # ST_WAIT_ONE_MINUTE_03
     #
     elif main_state == C.ST_WAIT_ONE_MINUTE_03:
-        if main_count > (PARAMETER_DELAY_V3V/period):
+        if main_count > (PARAMETER_DELAY_FINAL/period):
             main_state = C.ST_TURN_OFF_HEATER
 
         main_count += 1
