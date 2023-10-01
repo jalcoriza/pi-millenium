@@ -83,7 +83,8 @@ PARAMETER_DELAY_FINAL = 10 # Final delay time (1 minute)
 # Try best PUMP's performance
 PARAMETER_DELAY_V3V = 5*60 # Delay time to let operate V3V (change its state) in seconds (5 minutes)
 PARAMETER_DELAY_HYSTERESIS = 4*60 # Delay time to change any state (4 minutes) 
-PARAMETER_DELAY_TEST = 90*60 # Delay time to test heater (one and a half hour) 
+#PARAMETER_DELAY_TEST = 90*60 # Delay time to test heater (one and a half hour) 
+PARAMETER_DELAY_TEST = 60*60 # Delay time to test heater (3h00m=3x60+00=180m) 
 
 # output_gpio[] definition 
 # bit 0 = HEATER_CONTROL 
